@@ -3,11 +3,14 @@ import math
 from sklearn.neighbors import NearestNeighbors
 import matplotlib.pyplot as plt
 from scipy.interpolate import griddata
-from scipy.spatial import ConvexHull
-from sklearn.metrics import roc_auc_score
+import pandas as pd
 
 threeblob_X_file = '../data/threeblob_X.npy'
 threeblob_label_file = '../data/threeblob_label.npy'
+pendigits_X_file = '../data/pendigits_X.npy'
+pendigits_y_file = '../data/pendigits_y.npy'
+speech_X_file = '../data/speech_X.npy'
+speech_y_file = '../data/speech_y.npy'
 
 
 def knn_outlier_detection(X: np.ndarray, k: int) -> tuple[np.ndarray, np.ndarray]:
@@ -59,18 +62,28 @@ def load_data():
     try:
         threeblob_X = np.load(threeblob_X_file)
         threeblob_y = np.load(threeblob_label_file)
+        pendigits_X = np.load(pendigits_X_file)
+        pendigits_y = np.load(pendigits_y_file)
+        speech_X = np.load(speech_X_file)
+        speech_y = np.load(speech_y_file)
         print("✅ 数据加载成功！")
-        print(f"特征数据 X 的形状: {threeblob_X.shape}")
-        print(f"标签数据 y 的形状: {threeblob_y.shape}")
-        print(f"标签分布: 正常点 (0) = {np.sum(threeblob_y == 0)}, 异常点 (1) = {np.sum(threeblob_y == 1)}")
-        return threeblob_X, threeblob_y
+        print(f"threeblob 特征数据 X 的形状: {threeblob_X.shape}")
+        print(f"threeblob 标签数据 y 的形状: {threeblob_y.shape}")
+        print(f"threeblob 标签分布: 正常点 (0) = {np.sum(threeblob_y == 0)}, 异常点 (1) = {np.sum(threeblob_y == 1)}")
+        print(f"pendigits 特征数据 X 的形状: {pendigits_X.shape}")
+        print(f"pendigits 标签数据 y 的形状: {pendigits_y.shape}")
+        print(f"pendigits 标签分布: 正常点 (0) = {np.sum(pendigits_y == 0)}, 异常点 (1) = {np.sum(pendigits_y == 1)}")
+        print(f"speech 特征数据 X 的形状: {speech_X.shape}")
+        print(f"speech 特征数据 y 的形状: {speech_y.shape}")
+        print(f"speech 标签分布: 正常点 (0) = {np.sum(speech_y == 0)}, 异常点 (1) = {np.sum(speech_y == 1)}")
+        return threeblob_X, threeblob_y, pendigits_X, pendigits_y, speech_X, speech_y
     except FileNotFoundError as e:
         print(f"❌ 错误：找不到文件 {e}")
         print("请确保 threeblob_X.npy 和 threeblob_labels.npy 在当前目录下。")
-        return None, None
+        return None, None, None, None
     except Exception as e:
         print(f"❌ 加载数据时发生未知错误: {e}")
-        return None, None
+        return None, None, None, None
 
 def get_result(X, y, scores, ranks, filepath=None, title=None):
     """
@@ -89,10 +102,10 @@ def get_result(X, y, scores, ranks, filepath=None, title=None):
     top_N_indices = ranks[:N]
     p_at_n = np.mean(y[top_N_indices] == 1)
     errno = int(N * p_at_n)
-    title = title + f" ({errno} errors)"
 
     # ---------- 2. 高质量可视化 ----------
     if filepath is not None and title is not None:
+        title = title + f" ({errno} errors)"
         plt.figure(figsize=(8, 6), dpi=150)
         ax = plt.gca()
 
@@ -164,9 +177,56 @@ def get_result(X, y, scores, ranks, filepath=None, title=None):
 
 
 if __name__ == "__main__":
-    tb_X, tb_y = load_data()
-    scores, ranks = knn_outlier_detection(tb_X, int(math.sqrt(tb_X.shape[0])))
-    roc_auc, p_at_n = get_result(tb_X, tb_y, scores, ranks, "./output/tb_knn", "knn outcome on threeblob data")
-    print(roc_auc)
-    print(p_at_n)
+    # tb是人工生成的数据，pd是真实手写图像数据，sp是真实演讲数据
+    tb_X, tb_y, pd_X, pd_y, sp_X, sp_y = load_data()
+    tb_scores, tb_ranks = knn_outlier_detection(tb_X, int(math.sqrt(tb_X.shape[0])))
+    tb_roc_auc, tb_p_at_n = get_result(tb_X, tb_y, tb_scores, tb_ranks, "./output/tb_knn", "knn outcome on threeblob data")
+    pd_scores, pd_ranks = knn_outlier_detection(pd_X, int(math.sqrt(tb_X.shape[0])))
+    pd_roc_auc, pd_p_at_n = get_result(pd_X, pd_y, pd_scores, pd_ranks)
+    sp_scores, sp_ranks = knn_outlier_detection(sp_X, int(math.sqrt(sp_X.shape[0])))
+    sp_roc_auc, sp_p_at_n = get_result(sp_X, sp_y, sp_scores, sp_ranks)
+
+    # 下面是统计结果表格
+    models = {}
+    knn_results = {}
+    knn_results["threeblob"] = {"roc_auc": tb_roc_auc, "p_at_n": tb_p_at_n};
+    knn_results["speech"] = {"roc_auc": sp_roc_auc, "p_at_n": sp_p_at_n};
+    knn_results["pendigits"] = {"roc_auc": pd_roc_auc, "p_at_n": pd_p_at_n};
+    models['knn'] = knn_results
+
+    # 定义数据集名称和对应的数据
+    datasets = {
+        'threeblob': (tb_X, tb_y),
+        'pendigits': (pd_X, pd_y),
+        'speech': (sp_X, sp_y)
+    }
+    # === 构建 ROC-AUC 表格 ===
+    roc_df = pd.DataFrame({
+        model_name: [results[ds]['roc_auc'] for ds in datasets.keys()]
+        for model_name, results in models.items()
+    }, index=list(datasets.keys())).T  # 转置：行是模型，列是数据集
+    roc_df.index.name = "Model"
+    roc_df.columns.name = "Dataset"
+
+    # === 构建 P@N 表格 ===
+    p_at_n_df = pd.DataFrame({
+        model_name: [results[ds]['p_at_n'] for ds in datasets.keys()]
+        for model_name, results in models.items()
+    }, index=list(datasets.keys())).T
+    p_at_n_df.index.name = "Model"
+    p_at_n_df.columns.name = "Dataset"
+
+    # === 打印表格 ===
+    print("\n" + "=" * 50)
+    print("📊 ROC-AUC 表格")
+    print("=" * 50)
+    print(roc_df.round(3))
+
+    print("\n" + "=" * 50)
+    print("📊 Precision @ N 表格")
+    print("=" * 50)
+    print(p_at_n_df.round(3))
+
+    roc_df.round(3).to_csv("./output/roc_auc.csv")
+    p_at_n_df.round(3).to_csv("./output/p_at_n.csv")
 

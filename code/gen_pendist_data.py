@@ -30,7 +30,9 @@ def process_pendigits_arff(arff_file='', output_dir='.'):
 
     # 转为 Pandas DataFrame
     df = pd.DataFrame(data)
-    print(df.head(5))
+
+    # 查看基本信息
+    print(f"原始数据形状: {df.shape}")
 
     # 删除缺失值（虽然 Quality 显示为 0，仍检查）
     if df.isnull().any().any():
@@ -39,13 +41,13 @@ def process_pendigits_arff(arff_file='', output_dir='.'):
     else:
         print("✅ 无缺失值")
 
-    # 提取特征（前400个 input 字段）
-    feature_columns = [f'V{i}' for i in range(1, 400)]
+    # 提取特征（前16个 input 字段）
+    feature_columns = [f'input{i}' for i in range(1, 17)]
     X = df[feature_columns].values.astype(np.float32)
 
     # 提取标签：binaryClass 是 bytes 类型，需解码
-    y_bytes = df['Target'].values
-    y = np.array([1 if label == b'Anomaly' else 0 for label in y_bytes])  # N=异常(1), P=正常(0)
+    y_bytes = df['binaryClass'].values
+    y = np.array([1 if label == b'P' else 0 for label in y_bytes])  # N=异常(1), P=正常(0)
 
     # 标准化
     print("🔄 正在标准化特征...")
@@ -54,8 +56,8 @@ def process_pendigits_arff(arff_file='', output_dir='.'):
 
     # 保存
     os.makedirs(output_dir, exist_ok=True)
-    np.save(os.path.join(output_dir, '../data/speech_X.npy'), X_scaled)
-    np.save(os.path.join(output_dir, '../data/speech_y.npy'), y)
+    np.save(os.path.join(output_dir, '../data/pendigits_X.npy'), X_scaled)
+    np.save(os.path.join(output_dir, '../data/pendigits_y.npy'), y)
 
     # ✅ 输出统计信息
     n, d = X_scaled.shape
@@ -75,9 +77,9 @@ def process_pendigits_arff(arff_file='', output_dir='.'):
     print(f"✅ 已保存: {os.path.join(output_dir, 'pendigits_y.npy')}")
     print("=" * 50)
 
-    return
+    return X_scaled, y
 
 
 
 if __name__ == "__main__":
-    process_pendigits_arff('../data/speech.arff', output_dir='.')
+    X, y = process_pendigits_arff('../data/pendigits.arff', output_dir='.')

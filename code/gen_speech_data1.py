@@ -5,7 +5,7 @@ from sklearn.preprocessing import StandardScaler
 import os
 
 
-def process_pendigits_arff(arff_file='', output_dir='.'):
+def process_speech_arff(arff_file='', output_dir='.'):
     """
     Process pendigits.arff file, take features and labels, normalize, save as .npy file.
 

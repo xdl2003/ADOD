@@ -6,12 +6,15 @@ from scipy.interpolate import griddata
 import pandas as pd
 from adod import adod_outlier_detection
 
-threeblob_X_file = './data/threeblob_X.npy'
-threeblob_label_file = './data/threeblob_label.npy'
-pendigits_X_file = './data/pendigits_X.npy'
-pendigits_y_file = './data/pendigits_y.npy'
-speech_X_file = './data/speech_X.npy'
-speech_y_file = './data/speech_y.npy'
+threeblob_X_file = '../data/threeblob_X.npy'
+threeblob_label_file = '../data/threeblob_label.npy'
+pendigits_X_file = '../data/pendigits_X.npy'
+pendigits_y_file = '../data/pendigits_y.npy'
+speech_X_file = '../data/speech_X.npy'
+speech_y_file = '../data/speech_y.npy'
+file0 = '../data/5_campaign.npz'
+file1 = '../data/22_magic.gamma.npz'
+file2 = '../data/3_backdoor.npz'
 
 
 def knn_outlier_detection(X: np.ndarray, k: int) -> tuple[np.ndarray, np.ndarray]:
@@ -67,6 +70,17 @@ def load_data():
         pendigits_y = np.load(pendigits_y_file)
         speech_X = np.load(speech_X_file)
         speech_y = np.load(speech_y_file)
+        campaign_file = np.load(file0)
+        campaign_X = campaign_file['X']
+        campaign_y = campaign_file['y']
+        magic_file = np.load(file1, allow_pickle=True)
+        # print(magic_file.files)
+        magic_X = magic_file['X']
+        magic_y = magic_file['y']
+        bd_file = np.load(file2, allow_pickle=True)
+        # print(magic_file.files)
+        bd_X = bd_file['X']
+        bd_y = bd_file['y']
         print("✅ Load succesfully!")
         print(f"shape of threeblob feature data X: {threeblob_X.shape}")
         print(f"shape of threeblob label data y: {threeblob_y.shape}")
@@ -77,14 +91,26 @@ def load_data():
         print(f"shape of speech feature data X: {speech_X.shape}")
         print(f"shape of speech label data y: {speech_y.shape}")
         print(f"speech label distribution: noraml points (0) = {np.sum(speech_y == 0)}, anomalous points (1) = {np.sum(speech_y == 1)}")
-        return threeblob_X, threeblob_y, pendigits_X, pendigits_y, speech_X, speech_y
+        print(f"shape of campaign feature data X: {campaign_X.shape}")
+        print(f"shape of campaign label data y: {campaign_y.shape}")
+        print(f"campaign label distribution: noraml points (0) = {np.sum(campaign_y == 0)}, anomalous points (1) = {np.sum(campaign_y == 1)}")
+        print(f"shape of magic_gamma feature data X: {magic_X.shape}")
+        print(f"shape of magic_gamma label data y: {magic_y.shape}")
+        print(
+            f"magic_gamma label distribution: noraml points (0) = {np.sum(magic_y == 0)}, anomalous points (1) = {np.sum(magic_y == 1)}")
+        print(f"shape of backdoor feature data X: {bd_X.shape}")
+        print(f"shape of backdoor label data y: {bd_y.shape}")
+        print(
+            f"backdoor label distribution: noraml points (0) = {np.sum(bd_y == 0)}, anomalous points (1) = {np.sum(bd_y == 1)}")
+
+        return threeblob_X, threeblob_y, pendigits_X, pendigits_y, speech_X, speech_y, campaign_X, campaign_y, magic_X, magic_y, bd_X, bd_y
     except FileNotFoundError as e:
         print(f"❌ Error: Cannont find the files {e}")
         print("Please ensure threeblob_X.npy and threeblob_labels.npy under current directory.")
-        return None, None, None, None
+        return None, None, None, None, None, None, None, None, None, None
     except Exception as e:
         print(f"❌ Unknown errors happened while loading: {e}")
-        return None, None, None, None
+        return None, None, None, None, None, None, None, None, None, None
 
 def get_result(X, y, scores, ranks, filepath=None, title=None):
     """
@@ -179,27 +205,35 @@ def get_result(X, y, scores, ranks, filepath=None, title=None):
 
 if __name__ == "__main__":
     # tb is threeblob data，pd is pendigits data，sp is speech data
-    tb_X, tb_y, pd_X, pd_y, sp_X, sp_y = load_data()
+    load_data()
+
+    tb_X, tb_y, pd_X, pd_y, sp_X, sp_y, ca_X, ca_y, ma_X, ma_y, bd_X, bd_y = load_data()
     
     print("\n" + "=" * 60)
     print("Running kNN outlier detection algorithm")
     print("=" * 60)
     tb_scores, tb_ranks = knn_outlier_detection(tb_X, int(math.sqrt(tb_X.shape[0])))
-    tb_roc_auc, tb_p_at_n = get_result(tb_X, tb_y, tb_scores, tb_ranks, "./code/output/tb_knn", "knn outcome on threeblob data")
+    tb_roc_auc, tb_p_at_n = get_result(tb_X, tb_y, tb_scores, tb_ranks, "./output/tb_knn", "knn outcome on threeblob data")
     pd_scores, pd_ranks = knn_outlier_detection(pd_X, int(math.sqrt(pd_X.shape[0])))
     pd_roc_auc, pd_p_at_n = get_result(pd_X, pd_y, pd_scores, pd_ranks)
     sp_scores, sp_ranks = knn_outlier_detection(sp_X, int(math.sqrt(sp_X.shape[0])))
     sp_roc_auc, sp_p_at_n = get_result(sp_X, sp_y, sp_scores, sp_ranks)
+    ca_scores, ca_ranks = knn_outlier_detection(ca_X, int(math.sqrt(ca_X.shape[0])))
+    ca_roc_auc, ca_p_at_n = get_result(ca_X, ca_y, ca_scores, ca_ranks)
+    ma_scores, ma_ranks = knn_outlier_detection(ma_X, int(math.sqrt(ma_X.shape[0])))
+    ma_roc_auc, ma_p_at_n = get_result(ma_X, ma_y, ma_scores, ma_ranks)
+    bd_scores, bd_ranks = knn_outlier_detection(bd_X, int(math.sqrt(bd_X.shape[0])))
+    bd_roc_auc, bd_p_at_n = get_result(bd_X, bd_y, bd_scores, bd_ranks)
 
-    print("\n" + "=" * 60)
-    print("Running ADOD outlier detection algorithm")
-    print("=" * 60)
-    tb_adod_scores, tb_adod_ranks, _, _ = adod_outlier_detection(tb_X, None, 0.999, False, 3)
-    tb_adod_roc_auc, tb_adod_p_at_n = get_result(tb_X, tb_y, tb_adod_scores, tb_adod_ranks, "./code/output/tb_adod", "ADOD outcome on threeblob data")
-    pd_adod_scores, pd_adod_ranks, _, _ = adod_outlier_detection(pd_X, None, 0.999, False, 3)
-    pd_adod_roc_auc, pd_adod_p_at_n = get_result(pd_X, pd_y, pd_adod_scores, pd_adod_ranks)
-    sp_adod_scores, sp_adod_ranks, _, _ = adod_outlier_detection(sp_X, None, 0.999, False, 3)
-    sp_adod_roc_auc, sp_adod_p_at_n = get_result(sp_X, sp_y, sp_adod_scores, sp_adod_ranks)
+    # print("\n" + "=" * 60)
+    # print("Running ADOD outlier detection algorithm")
+    # print("=" * 60)
+    # tb_adod_scores, tb_adod_ranks, _, _ = adod_outlier_detection(tb_X, None, 0.999, False, 3)
+    # tb_adod_roc_auc, tb_adod_p_at_n = get_result(tb_X, tb_y, tb_adod_scores, tb_adod_ranks, "./code/output/tb_adod", "ADOD outcome on threeblob data")
+    # pd_adod_scores, pd_adod_ranks, _, _ = adod_outlier_detection(pd_X, None, 0.999, False, 3)
+    # pd_adod_roc_auc, pd_adod_p_at_n = get_result(pd_X, pd_y, pd_adod_scores, pd_adod_ranks)
+    # sp_adod_scores, sp_adod_ranks, _, _ = adod_outlier_detection(sp_X, None, 0.999, False, 3)
+    # sp_adod_roc_auc, sp_adod_p_at_n = get_result(sp_X, sp_y, sp_adod_scores, sp_adod_ranks)
 
     # Results statistic form is shown as below
     models = {}
@@ -207,19 +241,25 @@ if __name__ == "__main__":
     knn_results["threeblob"] = {"roc_auc": tb_roc_auc, "p_at_n": tb_p_at_n}
     knn_results["speech"] = {"roc_auc": sp_roc_auc, "p_at_n": sp_p_at_n}
     knn_results["pendigits"] = {"roc_auc": pd_roc_auc, "p_at_n": pd_p_at_n}
+    knn_results['campaign'] = {"roc_auc": ca_roc_auc, "p_at_n": ca_p_at_n}
+    knn_results['magic-gamma'] = {"roc_auc": ma_roc_auc, "p_at_n": ma_p_at_n}
+    knn_results['backdoor'] = {"roc_auc": bd_roc_auc, "p_at_n": bd_p_at_n}
     models['knn'] = knn_results
     
-    adod_results = {}
-    adod_results["threeblob"] = {"roc_auc": tb_adod_roc_auc, "p_at_n": tb_adod_p_at_n}
-    adod_results["speech"] = {"roc_auc": sp_adod_roc_auc, "p_at_n": sp_adod_p_at_n}
-    adod_results["pendigits"] = {"roc_auc": pd_adod_roc_auc, "p_at_n": pd_adod_p_at_n}
-    models['adod'] = adod_results
+    # adod_results = {}
+    # adod_results["threeblob"] = {"roc_auc": tb_adod_roc_auc, "p_at_n": tb_adod_p_at_n}
+    # adod_results["speech"] = {"roc_auc": sp_adod_roc_auc, "p_at_n": sp_adod_p_at_n}
+    # adod_results["pendigits"] = {"roc_auc": pd_adod_roc_auc, "p_at_n": pd_adod_p_at_n}
+    # models['adod'] = adod_results
 
     # Denote dataset name and acorresponding data
     datasets = {
         'threeblob': (tb_X, tb_y),
         'pendigits': (pd_X, pd_y),
-        'speech': (sp_X, sp_y)
+        'speech': (sp_X, sp_y),
+        'campaign': (ca_X, ca_y),
+        'magic-gamma': (ma_X, ma_y),
+        'backdoor': (bd_X, bd_y)
     }
     # === Build ROC-AUC form ===
     roc_df = pd.DataFrame({
@@ -248,5 +288,5 @@ if __name__ == "__main__":
     print("=" * 50)
     print(p_at_n_df.round(3))
 
-    roc_df.round(3).to_csv("./code/output/roc_auc.csv")
-    p_at_n_df.round(3).to_csv("./code/output/p_at_n.csv")
+    roc_df.round(3).to_csv("./output/roc_auc.csv")
+    p_at_n_df.round(3).to_csv("./output/p_at_n.csv")

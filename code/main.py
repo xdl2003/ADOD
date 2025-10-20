@@ -214,10 +214,10 @@ if __name__ == "__main__":
     print("=" * 60)
     tb_scores, tb_ranks = knn_outlier_detection(tb_X, int(math.sqrt(tb_X.shape[0])))
     tb_roc_auc, tb_p_at_n = get_result(tb_X, tb_y, tb_scores, tb_ranks, "./output/tb_knn", "knn outcome on threeblob data")
-    pd_scores, pd_ranks = knn_outlier_detection(pd_X, int(math.sqrt(pd_X.shape[0])))
-    pd_roc_auc, pd_p_at_n = get_result(pd_X, pd_y, pd_scores, pd_ranks)
-    sp_scores, sp_ranks = knn_outlier_detection(sp_X, int(math.sqrt(sp_X.shape[0])))
-    sp_roc_auc, sp_p_at_n = get_result(sp_X, sp_y, sp_scores, sp_ranks)
+    # pd_scores, pd_ranks = knn_outlier_detection(pd_X, int(math.sqrt(pd_X.shape[0])))
+    # pd_roc_auc, pd_p_at_n = get_result(pd_X, pd_y, pd_scores, pd_ranks)
+    # sp_scores, sp_ranks = knn_outlier_detection(sp_X, int(math.sqrt(sp_X.shape[0])))
+    # sp_roc_auc, sp_p_at_n = get_result(sp_X, sp_y, sp_scores, sp_ranks)
     ca_scores, ca_ranks = knn_outlier_detection(ca_X, int(math.sqrt(ca_X.shape[0])))
     ca_roc_auc, ca_p_at_n = get_result(ca_X, ca_y, ca_scores, ca_ranks)
     ma_scores, ma_ranks = knn_outlier_detection(ma_X, int(math.sqrt(ma_X.shape[0])))
@@ -226,40 +226,49 @@ if __name__ == "__main__":
     bd_roc_auc, bd_p_at_n = get_result(bd_X, bd_y, bd_scores, bd_ranks)
 
     # print("\n" + "=" * 60)
-    # print("Running ADOD outlier detection algorithm")
+    print("Running ADOD outlier detection algorithm")
     # print("=" * 60)
-    # tb_adod_scores, tb_adod_ranks, _, _ = adod_outlier_detection(tb_X, None, 0.999, False, 3)
-    # tb_adod_roc_auc, tb_adod_p_at_n = get_result(tb_X, tb_y, tb_adod_scores, tb_adod_ranks, "./code/output/tb_adod", "ADOD outcome on threeblob data")
+    tb_adod_scores, tb_adod_ranks, _, _ = adod_outlier_detection(tb_X, None, 0.999, False, 3)
+    tb_adod_roc_auc, tb_adod_p_at_n = get_result(tb_X, tb_y, tb_adod_scores, tb_adod_ranks, "./output/tb_adod", "ADOD outcome on threeblob data")
     # pd_adod_scores, pd_adod_ranks, _, _ = adod_outlier_detection(pd_X, None, 0.999, False, 3)
     # pd_adod_roc_auc, pd_adod_p_at_n = get_result(pd_X, pd_y, pd_adod_scores, pd_adod_ranks)
     # sp_adod_scores, sp_adod_ranks, _, _ = adod_outlier_detection(sp_X, None, 0.999, False, 3)
     # sp_adod_roc_auc, sp_adod_p_at_n = get_result(sp_X, sp_y, sp_adod_scores, sp_adod_ranks)
+    ca_adod_scores, ca_adod_ranks, _, _ = adod_outlier_detection(ca_X, None, 0.999, False, 3)
+    ca_adod_roc_auc, ca_adod_p_at_n = get_result(ca_X, ca_y, ca_adod_scores, ca_adod_ranks)
+    ma_adod_scores, ma_adod_ranks, _, _ = adod_outlier_detection(ma_X, None, 0.999, False, 3)
+    ma_adod_roc_auc, ma_adod_p_at_n = get_result(ma_X, ma_y, ma_adod_scores, ma_adod_ranks)
+    # bd_adod_scores, bd_adod_ranks, _, _ = adod_outlier_detection(bd_X, None, 0.999, False, 3)
+    # bd_adod_roc_auc, bd_adod_p_at_n = get_result(bd_X, bd_y, bd_adod_scores, bd_adod_ranks)
 
     # Results statistic form is shown as below
     models = {}
     knn_results = {}
     knn_results["threeblob"] = {"roc_auc": tb_roc_auc, "p_at_n": tb_p_at_n}
-    knn_results["speech"] = {"roc_auc": sp_roc_auc, "p_at_n": sp_p_at_n}
-    knn_results["pendigits"] = {"roc_auc": pd_roc_auc, "p_at_n": pd_p_at_n}
+    # knn_results["speech"] = {"roc_auc": sp_roc_auc, "p_at_n": sp_p_at_n}
+    # knn_results["pendigits"] = {"roc_auc": pd_roc_auc, "p_at_n": pd_p_at_n}
     knn_results['campaign'] = {"roc_auc": ca_roc_auc, "p_at_n": ca_p_at_n}
     knn_results['magic-gamma'] = {"roc_auc": ma_roc_auc, "p_at_n": ma_p_at_n}
     knn_results['backdoor'] = {"roc_auc": bd_roc_auc, "p_at_n": bd_p_at_n}
     models['knn'] = knn_results
     
-    # adod_results = {}
-    # adod_results["threeblob"] = {"roc_auc": tb_adod_roc_auc, "p_at_n": tb_adod_p_at_n}
+    adod_results = {}
+    adod_results["threeblob"] = {"roc_auc": tb_adod_roc_auc, "p_at_n": tb_adod_p_at_n}
     # adod_results["speech"] = {"roc_auc": sp_adod_roc_auc, "p_at_n": sp_adod_p_at_n}
     # adod_results["pendigits"] = {"roc_auc": pd_adod_roc_auc, "p_at_n": pd_adod_p_at_n}
-    # models['adod'] = adod_results
+    adod_results["campaign"] = {"roc_auc": ca_adod_roc_auc, "p_at_n": ca_adod_p_at_n}
+    adod_results["magic-gamma"] = {"roc_auc": ma_adod_roc_auc, "p_at_n": ma_adod_p_at_n}
+    # adod_results["backdoor"] = {"roc_auc": bd_adod_roc_auc, "p_at_n": bd_adod_p_at_n}
+    models['adod'] = adod_results
 
     # Denote dataset name and acorresponding data
     datasets = {
         'threeblob': (tb_X, tb_y),
-        'pendigits': (pd_X, pd_y),
-        'speech': (sp_X, sp_y),
+        # 'pendigits': (pd_X, pd_y),
+        # 'speech': (sp_X, sp_y),
         'campaign': (ca_X, ca_y),
         'magic-gamma': (ma_X, ma_y),
-        'backdoor': (bd_X, bd_y)
+        # 'backdoor': (bd_X, bd_y)
     }
     # === Build ROC-AUC form ===
     roc_df = pd.DataFrame({

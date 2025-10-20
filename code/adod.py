@@ -165,7 +165,7 @@ def adod_outlier_detection(X: np.ndarray, perplexity: int = None, p_cum: float =
 
 
 def binary_search_sigma(D_i: np.ndarray, target_perplexity: float, 
-                        tol: float = 1e-5, max_iter: int = 100) -> float:
+                        tol: float = 1e-5, max_iter: int = 50) -> float:
     """
     Use binary search to find perplexity to reach target σ
     

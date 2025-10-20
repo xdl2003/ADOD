@@ -1,2 +1,3 @@
-Model,threeblob,pendigits,speech,campaign,magic-gamma,backdoor
-knn,0.972,0.287,0.479,0.72,0.771,0.758
+Model,threeblob,campaign,magic-gamma
+knn,0.972,0.72,0.771
+adod,0.97,0.682,0.778
